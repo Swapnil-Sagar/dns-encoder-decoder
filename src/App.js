@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Buffer } from 'buffer'
 import './App.css' // Add styles for the spinner
+import { dnsRecordTypes } from './constants'
 
 const DNSApp = () => {
   const [dnsRecords, setDnsRecords] = useState([
@@ -8,19 +9,10 @@ const DNSApp = () => {
   ])
   const [encodedRecords, setEncodedRecords] = useState('')
   const [decodedRecords, setDecodedRecords] = useState([])
-  const [loading, setLoading] = useState(false) // Loading state
-  const [error, setError] = useState('') // Error state
-  const [hexString, setHexString] = useState('') // State for input hex string
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [hexString, setHexString] = useState('')
 
-  // DNS record types stored in JSON object
-  const dnsRecordTypes = {
-    A: 1,
-    AAAA: 28,
-    CAA: 257
-    // Add more record types here if needed
-  }
-
-  // Function to decode DNS records from a hex string with error handling
   const decodeDNSRecords = (hexData) => {
     try {
       const records = []
@@ -30,7 +22,7 @@ const DNSApp = () => {
       while (offset < buffer.length) {
         const record = {}
 
-        // Decode domain name (labels separated by length)
+        // Decode domain name
         const domainParts = []
         while (buffer[offset] !== 0) {
           const length = buffer[offset++]
@@ -71,7 +63,6 @@ const DNSApp = () => {
     }
   }
 
-  // Function to encode DNS records to a hex string
   const encodeDNSRecords = (records) => {
     let buffers = []
 
@@ -86,7 +77,7 @@ const DNSApp = () => {
 
       // Encode type (2 bytes)
       const typeBuffer = Buffer.alloc(2)
-      typeBuffer.writeUInt16BE(dnsRecordTypes[record.type], 0) // Use JSON object for type code
+      typeBuffer.writeUInt16BE(dnsRecordTypes[record.type], 0)
       buffers.push(typeBuffer)
 
       // Encode class (2 bytes)
@@ -113,37 +104,37 @@ const DNSApp = () => {
     return finalBuffer.toString('hex')
   }
 
-  // Handler to update DNS records
+  // update DNS records
   const handleRecordChange = (index, field, value) => {
     const updatedRecords = [...dnsRecords]
     updatedRecords[index][field] = value
     setDnsRecords(updatedRecords)
   }
 
-  // Handler to add a new record input field
+  // add a new record input field
   const addRecord = () => {
     setDnsRecords([...dnsRecords, { domain: '', type: 'A', class: 1, ttl: 3600, data: '' }])
   }
 
-  // Handler for encoding records
+  // encoding records
   const handleEncode = () => {
-    setLoading(true) // Set loading to true when encoding starts
-    setError('') // Clear previous error
+    setLoading(true)
+    setError('')
     try {
       const encoded = encodeDNSRecords(dnsRecords)
       setEncodedRecords(encoded)
     } catch (err) {
       setError('Encoding failed: ' + err.message)
     } finally {
-      setLoading(false) // Set loading to false after encoding completes
+      setLoading(false)
     }
   }
 
-  // Handler for decoding input hex string
+  // decoding input hex string
   const handleDecode = () => {
-    setError('') // Clear previous error
-    setDecodedRecords([]) // Reset decoded records
-    setLoading(true) // Set loading to true when decoding starts
+    setError('')
+    setDecodedRecords([])
+    setLoading(true)
     var re = /[0-9A-Fa-f]{6}/g
     try {
       if (re.test(hexString)) {
@@ -153,9 +144,9 @@ const DNSApp = () => {
         setError('Invalid hex string format. Please enter a valid hex string.')
       }
     } catch (err) {
-      setError('Decoding failed: ' + err.message) // Set error if decoding fails
+      setError('Decoding failed: ' + err.message)
     } finally {
-      setLoading(false) // Set loading to false after decoding completes
+      setLoading(false)
     }
   }
 
@@ -171,7 +162,7 @@ const DNSApp = () => {
               type='text'
               value={record.domain}
               onChange={(e) => handleRecordChange(index, 'domain', e.target.value)}
-              disabled={loading} // Disable input during loading
+              disabled={loading}
             />
           </label>
           <label>
@@ -179,7 +170,7 @@ const DNSApp = () => {
             <select
               value={record.type}
               onChange={(e) => handleRecordChange(index, 'type', e.target.value)}
-              disabled={loading} // Disable input during loading
+              disabled={loading}
             >
               {Object.keys(dnsRecordTypes).map((type) => (
                 <option key={type} value={type}>
@@ -194,7 +185,7 @@ const DNSApp = () => {
               type='number'
               value={record.class}
               onChange={(e) => handleRecordChange(index, 'class', e.target.value)}
-              disabled={loading} // Disable input during loading
+              disabled={loading}
             />
           </label>
           <label>
@@ -203,16 +194,16 @@ const DNSApp = () => {
               type='number'
               value={record.ttl}
               onChange={(e) => handleRecordChange(index, 'ttl', e.target.value)}
-              disabled={loading} // Disable input during loading
+              disabled={loading}
             />
           </label>
           <label>
-            Data (in hex):
+            Data (IP in hex):
             <input
               type='text'
               value={record.data}
               onChange={(e) => handleRecordChange(index, 'data', e.target.value)}
-              disabled={loading} // Disable input during loading
+              disabled={loading}
             />
           </label>
         </div>
@@ -223,21 +214,20 @@ const DNSApp = () => {
       <button onClick={handleEncode} disabled={loading}>
         Encode Records
       </button>
-      {loading ? <div className='spinner'></div> : null} {/* Show spinner during loading */}
+      {loading ? <div className='spinner'></div> : null}
       <h2>Encoded DNS Records</h2>
       <pre>{encodedRecords}</pre>
       <h2>Decode DNS Hex String</h2>
       <input
         type='text'
         value={hexString}
-        onChange={(e) => setHexString(e.target.value)} // Update hex string state
+        onChange={(e) => setHexString(e.target.value)}
         placeholder='Enter hex string to decode'
         disabled={loading}
       />
       <button onClick={handleDecode} disabled={loading}>
         Decode
       </button>{' '}
-      {/* Decode button */}
       <h3>Decoded DNS Records:</h3>
       {error ? (
         <div className='error'>{error}</div>
