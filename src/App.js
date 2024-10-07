@@ -1,7 +1,5 @@
-import React, { useState } from 'react'
-import { Buffer } from 'buffer'
+import React from 'react'
 import './App.css' // Add styles for the spinner
-import { dnsRecordTypes } from './constants'
 import Encoder from './components/Encoder'
 import Decoder from './components/Decoder'
 
